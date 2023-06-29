@@ -346,12 +346,16 @@ class PitticaTrovaprezzi extends Module
             if ($free <= 0.0) {
                 $free = null;
             }
-            
             foreach ($products as $p) {
                 $product    = new Product((int) $p['id_product'], $lang, (int) $shop);
                 $attributes = $product->getAttributesResume($lang, ': ');
                 $categories = array();
                 $cat        = '';
+				
+				$vendibileSuOrdinazione = $product->out_of_stock; //vale 0 se devo negare gli ordini senza stock, 1 se li permetto, 2 se eredito l'impostazione generale //MICHELE
+				$vendSuOrd = ($vendibileSuOrdinazione == 0) ? false : true; //michele, verifica se è ordinabile in maniera ON/OFF
+				$vendibileSuOrdinazioneTxt = $vendSuOrd ? "vend su ordinazione" : "vend solo se a magazzino"; //MICHELE debug
+				//echo $p['id_product']." in esame {$vendibileSuOrdinazioneTxt} {$vendibileSuOrdinazione} <br>"; //michele debug
 
                 foreach (Product::getProductCategoriesFull($product->id, $lang) as $category) {
                     if ($category['id_category'] != $root && $category['id_category'] != $home) {
@@ -387,8 +391,34 @@ class PitticaTrovaprezzi extends Module
 
                             $offer->add();
                         }
+						//AGGIUNTA MICHELE
+						else if ($vendSuOrd){ //nel caso la quantità disponibile del prodotto sia 0 o sotto, ma si possa permettere l'ordine comunque
+							$attribute['quantity'] = 3; //imposta una quantità fittizia di 3 pezzi
+							$minimal = (!empty($attribute['minimal_quantity']) && $attribute['minimal_quantity'] > 0) ? (int) $attribute['minimal_quantity'] : 1;
+
+                            $ean   = empty($attribute['ean13']) ? $product->ean13 : $attribute['ean13'];
+                            $offer = TrovaprezziOffer::fromProduct($product, $shop, $lang);
+
+                            $offer->updatePrices($shop, $currency, $minimal, $country->id, $group, $product->id, (int) $attribute['id_product_attribute']);
+
+                            $offer->id_product_attribute = (int) $attribute['id_product_attribute'];
+                            $offer->name                 = (is_array($product->name) ? $product->name[$lang] : $product->name) . ' - ' . $attribute['attribute_designation'];
+                            $offer->link                 = $this->context->link->getProductLink($product, null, $cat, null, null, $shop, (int) $attribute['id_product_attribute']);
+                            $offer->stock                = (int) $attribute['quantity'];
+                            $offer->categories           = implode(', ', $categories);
+                            $offer->weight               = (float) $attribute['weight'] + (float) $product->weight;
+                            $offer->part_number          = empty($attribute['reference']) ? $ean : $attribute['reference'];
+                            $offer->ean_code             = $ean;
+
+                            $offer->updateShippingCost($shop, $currency, $carrier, $country, $lang, $minimal, $product, (int) $attribute['id_product_attribute'], $free);
+                            $offer->populateImages($this->context, $product, $lang, $shop);
+
+                            $offer->add();
+						}
+						//FINE AGGIUNTA MICHELE
                     }
                 } else {
+					//echo $p['id_product']." attributi NON presenti <br>"; //michele
                     if ((int) $product->quantity) {
                         $minimal = $product->minimal_quantity > 0 ? (int) $product->minimal_quantity : 1;
 
@@ -409,6 +439,30 @@ class PitticaTrovaprezzi extends Module
 
                         $offer->add();
                     }
+					//AGGIUNTA MICHELE
+					else if ($vendSuOrd){ //nel caso la quantità disponibile del prodotto sia 0 o sotto, ma si possa permettere l'ordine comunque
+						$attribute['quantity'] = 3; //imposta una quantità fittizia di 3 pezzi
+						$quantitaFittizia = 3;
+						$minimal = $product->minimal_quantity > 0 ? (int) $product->minimal_quantity : 1;
+
+                        $offer = TrovaprezziOffer::fromProduct($product, $shop, $lang);
+
+                        $offer->updatePrices($shop, $currency, $minimal, $country->id, $group, $product->id);
+
+                        $offer->name        = is_array($product->name) ? $product->name[$lang] : $product->name;
+                        $offer->link        = $this->context->link->getProductLink($product, null, $cat, null, null, $shop);
+                        $offer->stock       = (int) $quantitaFittizia; //$product->quantity;
+                        $offer->categories  = implode(', ', $categories);
+                        $offer->weight      = (float) $product->weight;
+                        $offer->part_number = empty($product->reference) ? $product->ean13 : $product->reference;
+                        $offer->ean_code    = $product->ean13;
+
+                        $offer->updateShippingCost($shop, $currency, $carrier, $country, $lang, $minimal, $product, null, $free);
+                        $offer->populateImages($this->context, $product, $lang, $shop);
+
+                        $offer->add();
+					}
+					//FINE AGGIUNTA MICHELE
                 }
             }
         }

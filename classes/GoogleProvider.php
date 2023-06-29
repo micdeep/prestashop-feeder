@@ -115,8 +115,14 @@ class GoogleProvider extends Provider
         if ($offer->original_price != $offer->price) {
             $xml->writeElement('g:sale_price', $this->locale->formatPrice($offer->price, $this->context->currency->iso_code));
         }
-
-        $xml->writeElement('g:gtin', !empty($offer->ean_code) ? $offer->ean_code : $offer->part_number);
+		//$xml->writeElement('g:gtin', !empty($offer->ean_code) ? $offer->ean_code : $offer->part_number); //MODMICHELE
+		//MODIFICA MICHELE
+		if (!empty($offer->ean_code)){
+			$xml->writeElement('g:gtin', $offer->ean_code);
+		} else {
+			$xml->writeElement('g:mpn', $offer->part_number);
+		}
+		//FINE MODIFICA MICHELE
         $xml->writeElement('g:brand', $offer->brand);
         $xml->writeElement('g:availability', $offer->stock > 0 ? 'in stock' : 'out of stock');
         $xml->startElement('g:shipping');

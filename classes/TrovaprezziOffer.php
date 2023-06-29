@@ -47,6 +47,7 @@ class TrovaprezziOffer extends ObjectModel
     public $shipping_cost;
     public $weight;
     public $active;
+	public $image_feed_override; //MICHELE
 
     public static $definition = array(
         'table' => self::TABLE_NAME,
@@ -158,7 +159,7 @@ class TrovaprezziOffer extends ObjectModel
      * @param int     $shop    Shop ID.
      * @param int     $lang    Language ID.
      *
-     * @return TrovaprezziOffer
+     * @return Offer
      * @since  1.3.2
      */
     public static function fromProduct($product, $shop, $lang)
@@ -196,7 +197,13 @@ class TrovaprezziOffer extends ObjectModel
 
         foreach (Image::getImages($lang, $this->id_product, $this->id_product_attribute ? $this->id_product_attribute : null, $shop) as $image) {
             $img = $retriever->getImage($product, $image['id_image']);
-
+			//MICHELE
+			if ( !empty($image['legend']) && strpos($image['legend'],'XFEED') !== false ){
+				$this->image_feed_override = $img['large']['url'];
+			} else {
+				$this->image_feed_override = $empty;
+			}
+			//FINE MICHELE
             if (!empty($img['large']['url'])) {
                 $images[] = $img['large']['url'];
             }
@@ -216,6 +223,14 @@ class TrovaprezziOffer extends ObjectModel
                 $this->image_1 = $empty;
             }
         }
+		//MICHELE
+		if (!empty($this->image_feed_override)){
+			$tempImg = $this->image_3;
+			$this->image_3 = $this->image_2;
+			$this->image_2 = $this->image_1;
+			$this->image_1 = $this->image_feed_override;
+		} else {}
+		//MICHELE
 
         return $this;
     }
