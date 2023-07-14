@@ -110,10 +110,12 @@ class GoogleProvider extends Provider
         $xml->writeElement('link', $offer->link);
         $xml->writeElement('g:id', $offer->id_product . ($offer->id_product_attribute ? ('-' . $offer->id_product_attribute) : ''));
         $xml->writeElement('g:image_link', $offer->image_1);
-        $xml->writeElement('g:price', $this->locale->formatPrice($offer->original_price, $this->context->currency->iso_code));
+        //$xml->writeElement('g:price', $this->locale->formatPrice($offer->original_price, $this->context->currency->iso_code));
+        $xml->writeElement('g:price', $this->mic_formatta_prezzo($offer->original_price)); //MIC
 
         if ($offer->original_price != $offer->price) {
-            $xml->writeElement('g:sale_price', $this->locale->formatPrice($offer->price, $this->context->currency->iso_code));
+            //$xml->writeElement('g:sale_price', $this->locale->formatPrice($offer->price, $this->context->currency->iso_code));
+            $xml->writeElement('g:sale_price', $this->mic_formatta_prezzo($offer->price)); //MIC
         }
 		//$xml->writeElement('g:gtin', !empty($offer->ean_code) ? $offer->ean_code : $offer->part_number); //MODMICHELE
 		//MODIFICA MICHELE
@@ -128,9 +130,9 @@ class GoogleProvider extends Provider
         $xml->startElement('g:shipping');
         $xml->writeElement('g:country', $this->country);
         $xml->writeElement('g:service', $this->carrier->name);
-        $xml->writeElement('g:price', $this->locale->formatPrice($offer->shipping_cost, $this->context->currency->iso_code));
+        //$xml->writeElement('g:price', $this->locale->formatPrice($offer->shipping_cost, $this->context->currency->iso_code));
         $xml->endElement();
-
+        //MODIFICA MICHELE
         if (!empty($offer->image_2)) {
             $xml->writeElement('g:additional_image_link', $offer->image_2);
         }
@@ -138,7 +140,14 @@ class GoogleProvider extends Provider
         if (!empty($offer->image_3)) {
             $xml->writeElement('g:additional_image_link', $offer->image_3);
         }
-
+        $categoriaGoogle = $this->mic_ottieni_categoria_google($offer->categories);
+        if ($categoriaGoogle !== null){
+            //echo "categoria g:google_product_category : {$categoriaGoogle}";
+            $xml->writeElement('g:google_product_category', $categoriaGoogle);
+        } else {
+            $xml->writeElement('g:google_product_category', 0);
+        }
+        //FINE MODIFICA MICHELE
         return $xml;
     }
 
@@ -175,4 +184,35 @@ class GoogleProvider extends Provider
 
         $xml->endElement();
     }
+
+    //funzione per formattare il prezzo secondo necessità Google
+    public function mic_formatta_prezzo($price)
+    {
+        return number_format(
+            floor($price),
+            2, //numero minimo di decimali,
+            ".", //separatore di decimali
+            "" //nessun separatore di migliaia
+        )." EUR";
+    }
+
+    public function mic_ottieni_categoria_google($categories){
+        if (!isset($categories[0])){ return null; } else {} //se non è definita la categoria principale ritorna null
+        $mappatura=[
+            'Materassi' => 2696, //arredamento -> accessori -> materassi
+            'Reti' => 505764, //arredamento -> letti e accessori -> letti e telai per letti
+            'Poltrone reclinabili' => 6499, //Arredamento -> Sedie -> Poltrone, sedie con schienale reclinabile e poltrone reclinabili
+            'Guanciali' => 2700, //Casa e giardino > Biancheria > Lenzuola e coperte > Cuscini
+            'Letti' => 505764, //arredamento -> letti e accessori -> letti e telai per letti
+            'Rivestimenti Materassi' => 4420, //Casa e giardino > Biancheria > Lenzuola e coperte > Proteggi materasso > Coprimaterassi
+            'Copri Guanciali' => 2927, //Casa e giardino > Biancheria > Lenzuola e coperte > Federe e copricuscini
+        ];
+        if (!isset($mappatura[$categories[0]])){
+            return null; //se non c'è una mappatura definita, ritorna null
+        } else {
+            return $mappatura[$categories[0]];
+        }
+        return null;
+    }
+
 }

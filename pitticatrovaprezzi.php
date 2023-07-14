@@ -359,7 +359,14 @@ class PitticaTrovaprezzi extends Module
 
                 foreach (Product::getProductCategoriesFull($product->id, $lang) as $category) {
                     if ($category['id_category'] != $root && $category['id_category'] != $home) {
-                        $categories[] = $category['name'];
+                        //$categories[] = $category['name'];
+                        //MODIFICA DI MICHELE per fare in modo che la categoria di default venga messa come primo elemento dell'array
+                        if ($category['id_category'] == $product->id_category_default){
+                            array_unshift($categories,$category['name']);
+                            //echo "idp: {$p['id_product']} catname:{$category['name']}<br>";
+                        } else {
+                            $categories[] = $category['name'];
+                        }
                     }
 
                     if ($category['id_category'] == $product->id_category_default) {
