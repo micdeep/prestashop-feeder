@@ -133,19 +133,19 @@ class GoogleProvider extends Provider
         //$xml->writeElement('g:price', $this->locale->formatPrice($offer->shipping_cost, $this->context->currency->iso_code));
         $xml->endElement();
         //MODIFICA MICHELE
-        if (!empty($offer->image_2)) {
+        /*if (!empty($offer->image_2)) {
             $xml->writeElement('g:additional_image_link', $offer->image_2);
         }
 
         if (!empty($offer->image_3)) {
             $xml->writeElement('g:additional_image_link', $offer->image_3);
-        }
+        }*/
         $categoriaGoogle = $this->mic_ottieni_categoria_google($offer->categories);
         if ($categoriaGoogle !== null){
             //echo "categoria g:google_product_category : {$categoriaGoogle}";
             $xml->writeElement('g:google_product_category', $categoriaGoogle);
         } else {
-            $xml->writeElement('g:google_product_category', 0);
+            //$xml->writeElement('g:google_product_category', 0);
         }
         //FINE MODIFICA MICHELE
         return $xml;
