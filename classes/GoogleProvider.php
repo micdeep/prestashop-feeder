@@ -147,6 +147,7 @@ class GoogleProvider extends Provider
         } else {
             //$xml->writeElement('g:google_product_category', 0);
         }
+        $xml->writeElement('g:brand', 'Goldflex'); //AGGIUNTA PER IL BRAND
         //FINE MODIFICA MICHELE
         return $xml;
     }
