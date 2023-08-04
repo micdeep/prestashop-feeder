@@ -125,7 +125,8 @@ class GoogleProvider extends Provider
 			$xml->writeElement('g:mpn', $offer->part_number);
 		}
 		//FINE MODIFICA MICHELE
-        $xml->writeElement('g:brand', $offer->brand);
+        $xml->writeElement('g:brand', 'Goldflex'); //AGGIUNTA PER IL BRAND
+        //$xml->writeElement('g:brand', $offer->brand);
         $xml->writeElement('g:availability', $offer->stock > 0 ? 'in stock' : 'out of stock');
         $xml->startElement('g:shipping');
         $xml->writeElement('g:country', $this->country);
@@ -147,7 +148,6 @@ class GoogleProvider extends Provider
         } else {
             //$xml->writeElement('g:google_product_category', 0);
         }
-        $xml->writeElement('g:brand', 'Goldflex'); //AGGIUNTA PER IL BRAND
         //FINE MODIFICA MICHELE
         return $xml;
     }
