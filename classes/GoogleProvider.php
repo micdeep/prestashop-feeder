@@ -141,7 +141,9 @@ class GoogleProvider extends Provider
         if (!empty($offer->image_3)) {
             $xml->writeElement('g:additional_image_link', $offer->image_3);
         }*/
-        $categoriaGoogle = $this->mic_ottieni_categoria_google($offer->categories);
+		$categorieProdotto = explode(',',$offer->categories);
+        $categoriaGoogle = $this->mic_ottieni_categoria_google($categorieProdotto);
+		//echo "Prodotto id {$offer->id_product} Categorie".$categorieProdotto[0]." categoria google: {$categoriaGoogle}";
         if ($categoriaGoogle !== null){
             //echo "categoria g:google_product_category : {$categoriaGoogle}";
             $xml->writeElement('g:google_product_category', $categoriaGoogle);
@@ -201,7 +203,7 @@ class GoogleProvider extends Provider
         if (!isset($categories[0])){ return null; } else {} //se non è definita la categoria principale ritorna null
         $mappatura=[
             'Materassi' => 2696, //arredamento -> accessori -> materassi
-            'Reti' => 505764, //arredamento -> letti e accessori -> letti e telai per letti
+            'Reti' => 2720, //arredamento -> letti e accessori -> letti e telai per letti
             'Poltrone reclinabili' => 6499, //Arredamento -> Sedie -> Poltrone, sedie con schienale reclinabile e poltrone reclinabili
             'Guanciali' => 2700, //Casa e giardino > Biancheria > Lenzuola e coperte > Cuscini
             'Letti' => 505764, //arredamento -> letti e accessori -> letti e telai per letti
